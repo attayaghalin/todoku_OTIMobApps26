@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../repositories/setting_repository.dart';
 
 class ThemeProvider extends ChangeNotifier {
@@ -7,15 +7,27 @@ class ThemeProvider extends ChangeNotifier {
 
   bool _isDarkMode = false;
   bool get isDarkMode => _isDarkMode;
+  ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
   Future<void> init() async {
-    _isDarkMode = await _repository.loadDarkMode();
+    try {
+      _isDarkMode = await _repository.loadDarkMode();
+    } catch (e) {
+      debugPrint('Gagal memuat pengaturan tema: $e');
+      _isDarkMode = false;
+    }
     notifyListeners();
   }
 
   Future<void> toggleTheme(bool value) async {
+    if (_isDarkMode == value) return;
     _isDarkMode = value;
     notifyListeners();
-    await _repository.saveDarkMode(_isDarkMode);
+
+    try {
+      await _repository.saveDarkMode(_isDarkMode);
+    } catch (e) {
+      debugPrint('Gagal menyimpan pengaturan tema: $e');
+    }
   }
 }
