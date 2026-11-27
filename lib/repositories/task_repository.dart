@@ -19,13 +19,8 @@ class SharedPrefsTaskRepository implements TaskRepository {
       return [];
     }
 
-    try {
       final List<dynamic> jsonList = jsonDecode(jsonString);
-
       return jsonList.map((task) => TaskModel.fromJson(task as Map<String, dynamic>)).toList();
-    } catch (e) {
-      return [];
-    }
 
   }
 

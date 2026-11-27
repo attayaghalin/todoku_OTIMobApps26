@@ -20,6 +20,7 @@ class TaskProvider extends ChangeNotifier {
   String? _selectedTaskId;
   String? _storageError;
   bool _isProfilingSeeded = false;
+  bool _isDisposed = false;
 
   TaskModel? _lastDeletedTask;
   int? _lastDeletedIndex;
@@ -47,7 +48,8 @@ class TaskProvider extends ChangeNotifier {
 
   Future<void> init({bool seedForProfiling = false}) async {
     _isLoading = true;
-    notifyListeners();
+    _storageError = null;
+    if (!_isDisposed) notifyListeners();
 
     try {
       if (seedForProfiling) {
@@ -63,7 +65,7 @@ class TaskProvider extends ChangeNotifier {
       _recomputeFilteredTasks();
     } finally {
       _isLoading = false;
-      notifyListeners();
+      if (!_isDisposed) notifyListeners();
     }
   }
 
@@ -129,26 +131,26 @@ class TaskProvider extends ChangeNotifier {
   void selectTask(String? id) {
     if (_selectedTaskId == id) return;
     _selectedTaskId = id;
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
   }
 
   void setFilter(TaskFilter filter) {
     if (_activeFilter == filter) return;
     _activeFilter = filter;
     _recomputeFilteredTasks();
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
   }
 
   void setSearchQuery(String query) {
     if (_searchQuery == query) return;
     _searchQuery = query;
     _recomputeFilteredTasks();
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
   }
 
   void _commitChanges() {
     _recomputeFilteredTasks();
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
     _scheduleSave();
   }
 
@@ -197,12 +199,12 @@ class TaskProvider extends ChangeNotifier {
         await _repository.saveTasks(snapshot);
         if (_storageError != null) {
           _storageError = null;
-          notifyListeners();
+          if (!_isDisposed) notifyListeners();
         }
       } catch (e) {
         debugPrint('Gagal menyimpan tugas: $e');
         _storageError = 'Gagal menyimpan perubahan ke penyimpanan lokal.';
-        notifyListeners();
+        if (!_isDisposed) notifyListeners();
       }
     });
   }
@@ -224,11 +226,12 @@ class TaskProvider extends ChangeNotifier {
     );
 
     _recomputeFilteredTasks();
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _saveTimer?.cancel();
     super.dispose();
   }
